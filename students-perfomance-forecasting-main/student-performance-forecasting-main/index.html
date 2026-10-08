@@ -1,0 +1,303 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Performance Prediction</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #777;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .predict-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #667eea;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .predict-btn:hover {
+            background: #5568d9;
+        }
+
+        .predict-btn:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .pass {
+            display: block !important;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .fail {
+            display: block !important;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .error {
+            display: block !important;
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #999;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>Student Performance Prediction</h1>
+            <p>Enter student details to predict the performance</p>
+        </div>
+
+        <div class="form-group">
+            <label for="study_hours">Study Hours</label>
+            <input
+                type="number"
+                id="study_hours"
+                placeholder="Enter study hours"
+                min="0"
+                step="0.1"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="attendance">Attendance (%)</label>
+            <input
+                type="number"
+                id="attendance"
+                placeholder="Enter attendance percentage"
+                min="0"
+                max="100"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="assignment_score">Assignment Score</label>
+            <input
+                type="number"
+                id="assignment_score"
+                placeholder="Enter assignment score"
+                min="0"
+                max="100"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="previous_marks">Previous Marks</label>
+            <input
+                type="number"
+                id="previous_marks"
+                placeholder="Enter previous marks"
+                min="0"
+                max="100"
+            >
+        </div>
+
+        <button class="predict-btn" id="predictBtn" onclick="predict()">
+            Predict Performance
+        </button>
+
+        <div id="result"></div>
+
+        <div class="footer">
+            AI-Based Student Performance Prediction System
+        </div>
+
+    </div>
+
+    <script>
+
+        const API = "http://127.0.0.1:8000";
+
+        async function predict() {
+
+            const studyHours = document.getElementById("study_hours").value;
+            const attendance = document.getElementById("attendance").value;
+            const assignmentScore = document.getElementById("assignment_score").value;
+            const previousMarks = document.getElementById("previous_marks").value;
+
+            const resultElement = document.getElementById("result");
+            const button = document.getElementById("predictBtn");
+
+            // Validation
+            if (
+                studyHours === "" ||
+                attendance === "" ||
+                assignmentScore === "" ||
+                previousMarks === ""
+            ) {
+                resultElement.className = "error";
+                resultElement.innerText = "Please enter all values.";
+                return;
+            }
+
+            if (
+                attendance < 0 || attendance > 100 ||
+                assignmentScore < 0 || assignmentScore > 100 ||
+                previousMarks < 0 || previousMarks > 100 ||
+                studyHours < 0
+            ) {
+                resultElement.className = "error";
+                resultElement.innerText = "Please enter valid values.";
+                return;
+            }
+
+            const data = {
+                study_hours: Number(studyHours),
+                attendance: Number(attendance),
+                assignment_score: Number(assignmentScore),
+                previous_marks: Number(previousMarks)
+            };
+
+            try {
+
+                button.disabled = true;
+                button.innerText = "Predicting...";
+
+                resultElement.className = "";
+                resultElement.style.display = "block";
+                resultElement.innerText = "Please wait...";
+
+                const response = await fetch(`${API}/predict`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Prediction request failed");
+                }
+
+                const result = await response.json();
+
+                if (result.prediction === "Pass") {
+
+                    resultElement.className = "pass";
+                    resultElement.innerText =
+                        "Prediction: PASS";
+
+                } else {
+
+                    resultElement.className = "fail";
+                    resultElement.innerText =
+                        "Prediction: FAIL";
+                }
+
+            } catch (error) {
+
+                resultElement.className = "error";
+                resultElement.innerText =
+                    "Cannot connect to backend.";
+
+            } finally {
+
+                button.disabled = false;
+                button.innerText = "Predict Performance";
+
+            }
+        }
+
+    </script>
+
+</body>
+</html>
+```
